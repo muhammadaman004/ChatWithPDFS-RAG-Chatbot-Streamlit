@@ -27,6 +27,7 @@ llm = ChatGroq(groq_api_key=groq_api_key, model_name="Llama3-8b-8192")
 
 st.set_page_config(page_title="Conversational RAG Chatbot", page_icon="🤖")
 st.title("🤖 AI-Powered PDF Conversational Agent")
+st.markdown("**Welcome to the app!**  \nUpload your PDF in the sidebar to get started.")
 st.sidebar.title("Upload PDFs")
 if 'session_id' not in st.session_state:
     st.session_state.session_id = str(uuid.uuid4())
