@@ -15,6 +15,7 @@ from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader
+import tempfile
 import uuid
 import os
 __import__('pysqlite3')
@@ -37,13 +38,14 @@ if 'store' not in st.session_state:
     st.session_state.store = {}
 
 uploaded_files = st.sidebar.file_uploader("Choose PDF files", type="pdf", accept_multiple_files=True)
+uploaded_files = st.sidebar.file_uploader("Choose PDF files", type="pdf", accept_multiple_files=True)
 if uploaded_files:
     documents = []
     for uploaded_file in uploaded_files:
-        temppdf = f"./temp.pdf"
-        with open(temppdf, "wb") as file:
-            file.write(uploaded_file.getvalue())
-        loader = PyPDFLoader(temppdf)
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
+            temp_file.write(uploaded_file.getvalue()) 
+            temp_file_path = temp_file.name
+        loader = PyPDFLoader(temp_file_path)
         docs = loader.load()
         documents.extend(docs)
 
