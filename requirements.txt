@@ -8,4 +8,4 @@ langchain_huggingface
 pypdf
 langchain_chroma
 uuid
-chromadb
+chromadb==0.3.29
