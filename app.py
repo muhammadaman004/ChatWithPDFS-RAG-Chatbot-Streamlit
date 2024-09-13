@@ -12,6 +12,9 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader
 import uuid
 import os
+__import__('pysqlite3')
+import sys
+sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 
 os.environ["HF_TOKEN"] = st.secrets["HF_TOKEN"]
 groq_api_key = st.secrets["GROQ_API_KEY"]
