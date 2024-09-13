@@ -18,9 +18,6 @@ from langchain_community.document_loaders import PyPDFLoader
 import tempfile
 import uuid
 import os
-__import__('pysqlite3')
-import sys
-sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 
 os.environ["HF_TOKEN"] = st.secrets["HF_TOKEN"]
 groq_api_key = st.secrets["GROQ_API_KEY"]
@@ -36,8 +33,7 @@ if 'session_id' not in st.session_state:
 session_id = st.session_state.session_id
 if 'store' not in st.session_state:
     st.session_state.store = {}
-
-uploaded_files = st.sidebar.file_uploader("Choose PDF files", type="pdf", accept_multiple_files=True)
+    
 uploaded_files = st.sidebar.file_uploader("Choose PDF files", type="pdf", accept_multiple_files=True)
 if uploaded_files:
     documents = []
