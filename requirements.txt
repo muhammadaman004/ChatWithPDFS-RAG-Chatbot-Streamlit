@@ -10,3 +10,4 @@ langchain_chroma
 uuid
 chromadb
 pysqlite3-binary 
+protobuf==3.20.*
