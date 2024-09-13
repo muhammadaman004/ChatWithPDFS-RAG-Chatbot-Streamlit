@@ -8,4 +8,5 @@ langchain_huggingface
 pypdf
 langchain_chroma
 uuid
-chromadb==0.3.29
+chromadb
+pysqlite3-binary 
