@@ -13,14 +13,10 @@ from langchain_community.document_loaders import PyPDFLoader
 import uuid
 import os
 
-from dotenv import load_dotenv
-load_dotenv()
+os.environ["HF_TOKEN"] = st.secrets["HF_TOKEN"]
+groq_api_key = st.secrets["GROQ_API_KEY"]
 
-os.environ['HF_TOKEN'] = os.getenv("HF_TOKEN")
 embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-
-os.environ['GROQ_API_KEY'] = os.getenv("GROQ_API_KEY")
-groq_api_key = os.getenv("GROQ_API_KEY")
 llm = ChatGroq(groq_api_key=groq_api_key, model_name="Llama3-8b-8192")
 
 st.set_page_config(page_title="Conversational RAG Chatbot", page_icon="🤖")
@@ -31,8 +27,8 @@ if 'session_id' not in st.session_state:
 session_id = st.session_state.session_id
 if 'store' not in st.session_state:
     st.session_state.store = {}
-uploaded_files = st.sidebar.file_uploader("Choose PDF files", type="pdf", accept_multiple_files=True)
 
+uploaded_files = st.sidebar.file_uploader("Choose PDF files", type="pdf", accept_multiple_files=True)
 if uploaded_files:
     documents = []
     for uploaded_file in uploaded_files:
