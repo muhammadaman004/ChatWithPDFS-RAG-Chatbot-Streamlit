@@ -37,6 +37,10 @@ if 'store' not in st.session_state:
     
 uploaded_files = st.sidebar.file_uploader("Choose PDF files", type="pdf", accept_multiple_files=True)
 if uploaded_files:
+    if 'store' in st.session_state:
+        st.session_state.store = {} 
+    if 'messages' in st.session_state:
+        st.session_state.messages = [{"role": "assistant", "content": "Hello! How can I assist you with your PDFs?"}] 
     documents = []
     for uploaded_file in uploaded_files:
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
