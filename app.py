@@ -36,11 +36,12 @@ if 'store' not in st.session_state:
     st.session_state.store = {}
     
 uploaded_files = st.sidebar.file_uploader("Choose PDF files", type="pdf", accept_multiple_files=True)
+
 if uploaded_files:
     if 'store' in st.session_state:
         st.session_state.store = {} 
-    if 'messages' in st.session_state:
-        st.session_state.messages = [{"role": "assistant", "content": "Hello! How can I assist you with your PDFs?"}] 
+    if 'vectorstore' in st.session_state:
+        del st.session_state.vectorstore
     documents = []
     for uploaded_file in uploaded_files:
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
@@ -52,8 +53,8 @@ if uploaded_files:
 
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=5000, chunk_overlap=500)
     splits = text_splitter.split_documents(documents)
-    vectorstore = Chroma.from_documents(documents=splits, embedding=embeddings)
-    retriever = vectorstore.as_retriever()
+    st.session_state.vectorstore = Chroma.from_documents(documents=splits, embedding=embeddings)
+    retriever = st.session_state.vectorstore.as_retriever()
 
     contextualize_q_system_prompt = (
         "Given a chat history and the latest user question"
