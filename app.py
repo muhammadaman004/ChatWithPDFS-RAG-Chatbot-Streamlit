@@ -1,9 +1,4 @@
-__import__('pysqlite3')
-import sys
-sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
-
 import streamlit as st
-import sqlite3
 from langchain.chains import create_history_aware_retriever, create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_chroma import Chroma
@@ -15,7 +10,6 @@ from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader
-import tempfile
 import uuid
 import os
 
@@ -27,34 +21,28 @@ llm = ChatGroq(groq_api_key=groq_api_key, model_name="Llama3-8b-8192")
 
 st.set_page_config(page_title="Conversational RAG Chatbot", page_icon="🤖")
 st.title("🤖 AI-Powered PDF Conversational Agent")
-st.markdown("**Welcome to the app!**  \nUpload your PDF in the sidebar to get started.")
 st.sidebar.title("Upload PDFs")
 if 'session_id' not in st.session_state:
     st.session_state.session_id = str(uuid.uuid4())
 session_id = st.session_state.session_id
 if 'store' not in st.session_state:
     st.session_state.store = {}
-    
-uploaded_files = st.sidebar.file_uploader("Choose PDF files", type="pdf", accept_multiple_files=True)
 
+uploaded_files = st.sidebar.file_uploader("Choose PDF files", type="pdf", accept_multiple_files=True)
 if uploaded_files:
-    if 'store' in st.session_state:
-        st.session_state.store = {} 
-    if 'vectorstore' in st.session_state:
-        del st.session_state.vectorstore
     documents = []
     for uploaded_file in uploaded_files:
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
-            temp_file.write(uploaded_file.getvalue()) 
-            temp_file_path = temp_file.name
-        loader = PyPDFLoader(temp_file_path)
+        temppdf = f"./temp.pdf"
+        with open(temppdf, "wb") as file:
+            file.write(uploaded_file.getvalue())
+        loader = PyPDFLoader(temppdf)
         docs = loader.load()
         documents.extend(docs)
 
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=5000, chunk_overlap=500)
     splits = text_splitter.split_documents(documents)
-    st.session_state.vectorstore = Chroma.from_documents(documents=splits, embedding=embeddings)
-    retriever = st.session_state.vectorstore.as_retriever()
+    vectorstore = Chroma.from_documents(documents=splits, embedding=embeddings)
+    retriever = vectorstore.as_retriever()
 
     contextualize_q_system_prompt = (
         "Given a chat history and the latest user question"
