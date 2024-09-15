@@ -1,7 +1,7 @@
 import streamlit as st
 from langchain.chains import create_history_aware_retriever, create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain_chroma import Chroma
+from langchain.vectorstores.faiss import FAISS
 from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
@@ -9,9 +9,25 @@ from langchain_groq import ChatGroq
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.document_loaders import PyPDFLoader
+from PyPDF2 import PdfReader
 import uuid
 import os
+from langchain.schema import Document
+
+def get_session_history(session: str) -> BaseChatMessageHistory:
+        if session not in st.session_state.store:
+            st.session_state.store[session] = ChatMessageHistory()
+        return st.session_state.store[session]
+
+def process_uploaded_files(uploaded_files):
+    documents = []
+    for uploaded_file in uploaded_files:
+        pdf_reader = PdfReader(uploaded_file)
+        text = ""
+        for page in pdf_reader.pages:
+            text += page.extract_text()
+        documents.append(Document(page_content=text))
+    return documents
 
 os.environ["HF_TOKEN"] = st.secrets["HF_TOKEN"]
 groq_api_key = st.secrets["GROQ_API_KEY"]
@@ -30,18 +46,10 @@ if 'store' not in st.session_state:
 
 uploaded_files = st.sidebar.file_uploader("Choose PDF files", type="pdf", accept_multiple_files=True)
 if uploaded_files:
-    documents = []
-    for uploaded_file in uploaded_files:
-        temppdf = f"./temp.pdf"
-        with open(temppdf, "wb") as file:
-            file.write(uploaded_file.getvalue())
-        loader = PyPDFLoader(temppdf)
-        docs = loader.load()
-        documents.extend(docs)
-
+    documents = process_uploaded_files(uploaded_files)
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=5000, chunk_overlap=500)
     splits = text_splitter.split_documents(documents)
-    vectorstore = Chroma.from_documents(documents=splits, embedding=embeddings)
+    vectorstore = FAISS.from_documents(documents=splits, embedding=embeddings)
     retriever = vectorstore.as_retriever()
 
     contextualize_q_system_prompt = (
@@ -80,11 +88,6 @@ if uploaded_files:
 
     question_answer_chain = create_stuff_documents_chain(llm, qa_prompt)
     rag_chain = create_retrieval_chain(history_aware_retriever, question_answer_chain)
-
-    def get_session_history(session: str) -> BaseChatMessageHistory:
-        if session not in st.session_state.store:
-            st.session_state.store[session] = ChatMessageHistory()
-        return st.session_state.store[session]
 
     conversational_rag_chain = RunnableWithMessageHistory(
         rag_chain, get_session_history,
