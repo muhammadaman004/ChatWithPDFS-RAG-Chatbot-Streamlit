@@ -5,8 +5,6 @@ langchain_core
 streamlit
 langchain_groq
 langchain_huggingface
-pypdf
-langchain_chroma
+PyPDF2
 uuid
-chromadb
-
+faiss-cpu
